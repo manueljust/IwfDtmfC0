@@ -65,8 +65,8 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
 /* USER CODE BEGIN EFP */
+void TIM3_IRQHandler_IMPL(void);
 
 /* USER CODE END EFP */
 
@@ -93,6 +93,31 @@ void Error_Handler(void);
 #endif
 
 /* USER CODE BEGIN Private defines */
+#define CORE_FREQ (48000000)
+#define MAXINTF (4294967296.0)
+#define INCREMENT(x) ((x) * MAXINTF / CORE_FREQ + 0.5)
+
+#define DIAL_IDLE (0xFF)
+#define INTER_DIGIT_PAUSE (500u)
+#define EARTH_PAUSE (500u)
+#define TONE_TIME (100u)
+
+#define DIGIT_1 (0x00u)
+#define DIGIT_2 (0x01u)
+#define DIGIT_3 (0x02u)
+#define DIGIT_A (0x03u)
+#define DIGIT_4 (0x10u)
+#define DIGIT_5 (0x11u)
+#define DIGIT_6 (0x12u)
+#define DIGIT_B (0x13u)
+#define DIGIT_7 (0x20u)
+#define DIGIT_8 (0x21u)
+#define DIGIT_9 (0x22u)
+#define DIGIT_C (0x23u)
+#define DIGIT_STAR (0x30u)
+#define DIGIT_0 (0x31u)
+#define DIGIT_HASH (0x32u)
+#define DIGIT_D (0x33u)
 
 /* USER CODE END Private defines */
 

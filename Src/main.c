@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "button.h"
 
 /* USER CODE END Includes */
 
@@ -45,18 +46,57 @@
 
 /* USER CODE BEGIN PV */
 
-/* USER CODE END PV */
+static button_t nsi_s = { .GPIOx = NSI_GPIO_Port, .GPIO_Pin = NSI_Pin, .debounceTimeMs = 5u };
+static button_t gnd_s = { .GPIOx = BUTTON_GND_GPIO_Port, .GPIO_Pin = BUTTON_GND_Pin, .debounceTimeMs = 5u };
+static button_t * const nsi = &nsi_s;
+static button_t * const gnd = &gnd_s;
+
+static volatile uint8_t pulseCount, earthPressed = 0;
+static volatile uint32_t ph1, ph2, dph1, dph2, samplesLeft, nowMs = 0;
+
+static const uint8_t sine[256] = {
+  0,  0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  3,  3,  4,  4,  5,
+  6,  6,  7,  8,  9,  9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20,
+ 21, 23, 24, 25, 27, 28, 30, 31, 32, 34, 35, 37, 39, 40, 42, 43,
+ 45, 47, 48, 50, 52, 54, 55, 57, 59, 61, 62, 64, 66, 68, 69, 71,
+ 73, 75, 77, 78, 80, 82, 84, 85, 87, 89, 91, 92, 94, 96, 98, 99,
+101,103,104,106,107,109,111,112,114,115,116,118,119,121,122,123,
+125,126,127,128,129,131,132,133,134,135,136,137,137,138,139,140,
+140,141,142,142,143,143,144,144,145,145,145,145,146,146,146,146,
+146,146,146,146,146,145,145,145,145,144,144,143,143,142,142,141,
+140,140,139,138,137,137,136,135,134,133,132,131,129,128,127,126,
+125,123,122,121,119,118,116,115,114,112,111,109,107,106,104,103,
+101, 99, 98, 96, 94, 92, 91, 89, 87, 85, 84, 82, 80, 78, 77, 75,
+ 73, 71, 69, 68, 66, 64, 62, 61, 59, 57, 55, 54, 52, 50, 48, 47,
+ 45, 43, 42, 40, 39, 37, 35, 34, 32, 31, 30, 28, 27, 25, 24, 23,
+ 21, 20, 19, 18, 17, 15, 14, 13, 12, 11, 10,  9,  9,  8,  7,  6,
+  6,  5,  4,  4,  3,  3,  2,  2,  1,  1,  1,  1,  0,  0,  0,  0,
+};
+
+static const uint32_t rowIncrements[4] = {
+    INCREMENT(697),
+    INCREMENT(770),
+    INCREMENT(862),
+    INCREMENT(941),
+};
+static const uint32_t columnIncrements[4] = {
+    INCREMENT(1209),
+    INCREMENT(1336),
+    INCREMENT(1477),
+    INCREMENT(1633),
+};
+
+static const uint8_t numbers[10] = { DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4, DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9, DIGIT_0 };/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-
+void PlaySines(uint8_t digit, uint32_t time);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -67,7 +107,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,7 +144,58 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+      ReadButtonState(nsi, nowMs);
+      ReadButtonState(gnd, nowMs);
+
+      switch (nsi->state)
+      {
+          case BTN_RISING: // rising is when nsi contact is being opened
+              if (DIAL_IDLE == pulseCount)
+              {
+                  pulseCount = 0;
+              }
+              break;
+          case BTN_FALLING: // falling is when nsi contact is being closed
+              pulseCount++;
+              // should not happen... but guard anyways
+              if (10 > pulseCount)
+              {
+                  pulseCount = 10;
+              }
+              break;
+          case BTN_DOWN: // down means nsi is closed
+              if (DIAL_IDLE != pulseCount && (nowMs - nsi->lastEdgeTime) > INTER_DIGIT_PAUSE)
+              {
+                  PlaySines(numbers[pulseCount], TONE_TIME);
+                  pulseCount = DIAL_IDLE;
+              }
+              break;
+          default:
+              // nothing to do
+              break;
+      }
+
+      switch (gnd->state)
+      {
+          case BTN_DOWN:
+              // long press -> dial *
+              if (EARTH_PAUSE < (nowMs - gnd->lastEdgeTime) && 0 == earthPressed)
+              {
+                  earthPressed = 1;
+                  PlaySines(DIGIT_HASH, TONE_TIME);
+              }
+              break;
+          case BTN_RISING:
+              // short press -> dial #
+              if (EARTH_PAUSE > (nowMs - gnd->lastEdgeTime) && 0 == earthPressed)
+              {
+                    PlaySines(DIGIT_STAR, TONE_TIME);
+              }
+              earthPressed = 0;
+          default:
+              // nothing to do
+              break;
+      }    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -140,9 +230,9 @@ void SystemClock_Config(void)
 
   /* Set APB1 prescaler*/
   LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-  LL_Init1msTick(48000000);
+  LL_Init1msTick(CORE_FREQ);
   /* Update CMSIS variable (which can be updated also through SystemCoreClockUpdate function) */
-  LL_SetSystemCoreClock(48000000);
+  LL_SetSystemCoreClock(CORE_FREQ);
 }
 
 /**
@@ -157,7 +247,41 @@ static void MX_NVIC_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void PlaySines(uint8_t digit, uint32_t duration)
+{
+    if (0 == samplesLeft)
+    {
+        samplesLeft = CORE_FREQ * duration / 1000;
 
+        ph1 = ph2 = 0;
+        dph1 = rowIncrements[digit >> 4];
+        dph2 = columnIncrements[digit & 0x0f];
+
+        // enable pwm out (tim3 and tim1)
+    }
+}
+
+void TIM3_IRQHandler_IMPL(void)
+{
+    if (samplesLeft == 0u)
+    {
+        // disable tim1 and tim3
+    }
+    else
+    {
+        samplesLeft--;
+
+        // accumulate phases
+        ph1 += dph1;
+        ph2 += dph2;
+
+        uint8_t a1 = sine[ph1 >> 24];
+        uint8_t a2 = sine[ph2 >> 24];
+        uint8_t s = a1 + (a2 - ((a2 + 2) >> 2)); // +2 ensures we never exceed 255
+
+ //       LL_TIM_OC_SetCompareCH4(TIM1, s);
+    }
+}
 /* USER CODE END 4 */
 
 /**
