@@ -247,21 +247,12 @@ static void MX_NVIC_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void PlaySines(uint8_t digit, uint32_t duration)
+void OnSystick(void)
 {
-    if (0 == samplesLeft)
-    {
-        samplesLeft = CORE_FREQ * duration / 1000;
-
-        ph1 = ph2 = 0;
-        dph1 = rowIncrements[digit >> 4];
-        dph2 = columnIncrements[digit & 0x0f];
-
-        // enable pwm out (tim3 and tim1)
-    }
+    nowMs++;
 }
 
-void TIM3_IRQHandler_IMPL(void)
+void OnTim3(void)
 {
     if (samplesLeft == 0u)
     {
@@ -280,6 +271,20 @@ void TIM3_IRQHandler_IMPL(void)
         uint8_t s = a1 + (a2 - ((a2 + 2) >> 2)); // +2 ensures we never exceed 255
 
  //       LL_TIM_OC_SetCompareCH4(TIM1, s);
+    }
+}
+
+void PlaySines(uint8_t digit, uint32_t duration)
+{
+    if (0 == samplesLeft)
+    {
+        samplesLeft = CORE_FREQ * duration / 1000;
+
+        ph1 = ph2 = 0;
+        dph1 = rowIncrements[digit >> 4];
+        dph2 = columnIncrements[digit & 0x0f];
+
+        // enable pwm out (tim3 and tim1)
     }
 }
 /* USER CODE END 4 */

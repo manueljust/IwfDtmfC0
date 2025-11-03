@@ -66,7 +66,8 @@ extern "C" {
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 /* USER CODE BEGIN EFP */
-void TIM3_IRQHandler_IMPL(void);
+void OnTim3(void);
+void OnSystick(void);
 
 /* USER CODE END EFP */
 
