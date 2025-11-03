@@ -256,7 +256,8 @@ void OnTim3(void)
 {
     if (samplesLeft == 0u)
     {
-        // disable tim1 and tim3
+        LL_TIM_DisableCounter(TIM3);
+        LL_TIM_DisableCounter(TIM1);
     }
     else
     {
@@ -270,7 +271,7 @@ void OnTim3(void)
         uint8_t a2 = sine[ph2 >> 24];
         uint8_t s = a1 + (a2 - ((a2 + 2) >> 2)); // +2 ensures we never exceed 255
 
- //       LL_TIM_OC_SetCompareCH4(TIM1, s);
+        LL_TIM_OC_SetCompareCH4(TIM1, s);
     }
 }
 
@@ -285,6 +286,8 @@ void PlaySines(uint8_t digit, uint32_t duration)
         dph2 = columnIncrements[digit & 0x0f];
 
         // enable pwm out (tim3 and tim1)
+        LL_TIM_EnableCounter(TIM3);
+        LL_TIM_EnableCounter(TIM1);
     }
 }
 /* USER CODE END 4 */

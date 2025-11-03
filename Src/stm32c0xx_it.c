@@ -146,7 +146,12 @@ void SysTick_Handler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-    OnTim3();
+    if (LL_TIM_IsActiveFlag_UPDATE(TIM3))
+    {
+        LL_TIM_ClearFlag_UPDATE(TIM3);
+
+        OnTim3();
+    }
   /* USER CODE END TIM3_IRQn 0 */
   /* USER CODE BEGIN TIM3_IRQn 1 */
 
