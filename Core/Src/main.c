@@ -85,7 +85,7 @@ static const uint32_t columnIncrements[4] = {
     INCREMENT(1633),
 };
 
-static const uint8_t numbers[10] = { DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4, DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9, DIGIT_0 };
+static const uint8_t digits[10] = { DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4, DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9, DIGIT_0 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -172,7 +172,7 @@ int main(void)
           case BTN_DOWN: // down means nsi is closed
               if (DIAL_IDLE != pulseCount && (nowMs - nsi->lastEdgeTime) > INTER_DIGIT_PAUSE)
               {
-                  PlaySines(numbers[pulseCount], TONE_TIME);
+                  PlaySines(digits[(pulseCount-1) % 10], TONE_TIME);
                   pulseCount = DIAL_IDLE;
               }
               break;
