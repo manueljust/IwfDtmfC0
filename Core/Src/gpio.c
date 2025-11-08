@@ -50,10 +50,10 @@ void MX_GPIO_Init(void)
   LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
 
   /**/
-  GPIO_InitStruct.Pin = NRST_Pin;
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_2;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(NRST_GPIO_Port, &GPIO_InitStruct);
+  LL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /**/
   GPIO_InitStruct.Pin = BUTTON_GND_Pin;
@@ -71,7 +71,7 @@ void MX_GPIO_Init(void)
   LL_SYSCFG_ConfigPinMux(LL_PINMUX_SO8_PIN4_PF2);
 
   /**/
-  LL_SYSCFG_ConfigPinMux(LL_PINMUX_SO8_PIN5_PA11);
+  LL_SYSCFG_ConfigPinMux(LL_PINMUX_SO8_PIN5_PA8);
 
 }
 

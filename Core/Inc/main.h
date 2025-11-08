@@ -65,6 +65,7 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
+
 /* USER CODE BEGIN EFP */
 void OnTim3(void);
 void OnSystick(void);
@@ -74,9 +75,7 @@ void OnSystick(void);
 /* Private defines -----------------------------------------------------------*/
 #define AUDIO_OUT_Pin LL_GPIO_PIN_7
 #define AUDIO_OUT_GPIO_Port GPIOB
-#define NRST_Pin LL_GPIO_PIN_2
-#define NRST_GPIO_Port GPIOF
-#define BUTTON_GND_Pin LL_GPIO_PIN_11
+#define BUTTON_GND_Pin LL_GPIO_PIN_8
 #define BUTTON_GND_GPIO_Port GPIOA
 #define NSI_Pin LL_GPIO_PIN_12
 #define NSI_GPIO_Port GPIOA
@@ -95,13 +94,14 @@ void OnSystick(void);
 
 /* USER CODE BEGIN Private defines */
 #define CORE_FREQ (48000000)
+#define SAMPLE_FREQ (40000)
 #define MAXINTF (4294967296.0)
-#define INCREMENT(x) ((x) * MAXINTF / CORE_FREQ + 0.5)
+#define INCREMENT(x) ((x) * MAXINTF / SAMPLE_FREQ + 0.5)
 
 #define DIAL_IDLE (0xFF)
 #define INTER_DIGIT_PAUSE (500u)
 #define EARTH_PAUSE (500u)
-#define TONE_TIME (100u)
+#define TONE_TIME (1000u)
 
 #define DIGIT_1 (0x00u)
 #define DIGIT_2 (0x01u)
